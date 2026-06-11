@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0c10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PENMANSHIP — 20-Week Lyric Device Trainer</title>
+<style>
+  :root{
+    --ink:#0b0c10;
+    --ink2:#12141b;
+    --ink3:#1a1d27;
+    --line:#262a38;
+    --paper:#ece6d8;
+    --paper-dim:#9a968b;
+    --amber:#e0a93e;
+    --amber-soft:rgba(224,169,62,.14);
+    --green:#7fb98a;
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:'SF Mono',ui-monospace,'Cascadia Mono',Menlo,Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:var(--sans);
+    line-height:1.55;
+    min-height:100vh;
+    padding-bottom:90px;
+  }
+  /* ---------- header ---------- */
+  header{
+    padding:max(20px,env(safe-area-inset-top)) 20px 18px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#0e1018 0%,var(--ink) 100%);
+    position:sticky;top:0;z-index:50;
+  }
+  .eyebrow{
+    font-family:var(--mono);font-size:10px;letter-spacing:.22em;
+    color:var(--amber);text-transform:uppercase;margin-bottom:6px;
+  }
+  h1{
+    font-family:var(--serif);font-weight:600;font-size:26px;letter-spacing:.01em;
+  }
+  h1 em{font-style:italic;color:var(--amber)}
+  .sub{font-size:12px;color:var(--paper-dim);margin-top:2px}
+  /* ---------- progress ---------- */
+  .progress-wrap{margin-top:14px}
+  .progress-meta{
+    display:flex;justify-content:space-between;
+    font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+    color:var(--paper-dim);text-transform:uppercase;margin-bottom:6px;
+  }
+  .progress-meta b{color:var(--paper);font-weight:600}
+  .bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+  .bar > div{height:100%;background:var(--amber);width:0%;transition:width .5s ease}
+  /* ---------- tabs ---------- */
+  nav{
+    position:fixed;bottom:0;left:0;right:0;z-index:60;
+    display:flex;background:rgba(11,12,16,.96);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav button{
+    flex:1;background:none;border:none;color:var(--paper-dim);
+    font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    padding:16px 4px;cursor:pointer;
+  }
+  nav button.active{color:var(--amber)}
+  /* ---------- tracklist ---------- */
+  main{padding:8px 0}
+  .phase-label{
+    font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--paper-dim);padding:22px 20px 8px;
+  }
+  .phase-label span{color:var(--amber)}
+  .track{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 20px;border-bottom:1px solid var(--ink3);
+    cursor:pointer;transition:background .15s;
+  }
+  .track:active{background:var(--ink2)}
+  .tnum{
+    font-family:var(--mono);font-size:12px;color:var(--paper-dim);
+    width:24px;flex-shrink:0;text-align:right;
+  }
+  .track.done .tnum{color:var(--green)}
+  .tbody{flex:1;min-width:0}
+  .tname{font-family:var(--serif);font-size:17px;letter-spacing:.01em}
+  .track.done .tname{color:var(--paper-dim);text-decoration:line-through;text-decoration-color:rgba(127,185,138,.5);text-decoration-thickness:1px}
+  .tref{font-size:11px;color:var(--paper-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tstate{font-family:var(--mono);font-size:14px;flex-shrink:0;width:20px;text-align:center;color:var(--line)}
+  .track.done .tstate{color:var(--green)}
+  .track.current .tstate{color:var(--amber)}
+  .track.current{background:var(--amber-soft);border-left:2px solid var(--amber);padding-left:18px}
+  .now-label{
+    font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--amber);
+    text-transform:uppercase;
+  }
+  /* ---------- detail view ---------- */
+  .detail{padding:24px 20px 30px;display:none}
+  .back{
+    background:none;border:none;color:var(--paper-dim);font-family:var(--mono);
+    font-size:11px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;
+    margin-bottom:22px;padding:4px 0;
+  }
+  .back:before{content:'← '}
+  .week-tag{
+    font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--amber);
+    text-transform:uppercase;margin-bottom:8px;
+  }
+  .detail h2{font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.15;margin-bottom:18px}
+  .block{margin-bottom:22px}
+  .block-label{
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--paper-dim);margin-bottom:7px;display:flex;align-items:center;gap:8px;
+  }
+  .block-label:after{content:'';flex:1;height:1px;background:var(--line)}
+  .block p{font-size:15px;color:#cfc9bb}
+  .listen{
+    background:var(--ink2);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;
+  }
+  .listen .song{font-family:var(--serif);font-size:17px;font-style:italic;margin-bottom:3px}
+  .listen .artist{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:9px}
+  .listen .why{font-size:13.5px;color:var(--paper-dim)}
+  .drill{
+    border-left:2px solid var(--amber);padding:2px 0 2px 14px;
+    font-size:15px;color:#cfc9bb;
+  }
+  /* ---------- bars editor ---------- */
+  textarea{
+    width:100%;min-height:150px;background:var(--ink2);border:1px solid var(--line);
+    border-radius:10px;color:var(--paper);font-family:var(--serif);font-size:16px;
+    line-height:1.8;padding:14px 16px;resize:vertical;outline:none;
+  }
+  textarea:focus{border-color:var(--amber)}
+  textarea::placeholder{color:#555a68;font-style:italic}
+  .save-row{display:flex;gap:10px;margin-top:12px}
+  .btn{
+    flex:1;border:none;border-radius:10px;padding:15px;cursor:pointer;
+    font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+  }
+  .btn-save{background:var(--ink3);color:var(--paper);border:1px solid var(--line)}
+  .btn-done{background:var(--amber);color:var(--ink);font-weight:700}
+  .btn-done.undone{background:var(--ink3);color:var(--green);border:1px solid var(--green)}
+  .saved-flash{
+    font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--green);
+    text-transform:uppercase;text-align:center;margin-top:10px;height:14px;
+  }
+  /* ---------- notebook view ---------- */
+  .notebook{padding:10px 20px 30px;display:none}
+  .nb-entry{border-bottom:1px solid var(--ink3);padding:18px 0}
+  .nb-week{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--amber);text-transform:uppercase;margin-bottom:6px}
+  .nb-bars{font-family:var(--serif);font-size:16px;line-height:1.8;white-space:pre-wrap;color:#dcd6c8}
+  .nb-empty{padding:60px 20px;text-align:center;color:var(--paper-dim);font-size:14px}
+  .nb-empty .big{font-family:var(--serif);font-size:22px;font-style:italic;color:var(--paper);margin-bottom:8px}
+  /* ---------- guide view ---------- */
+  .guide{padding:24px 20px 30px;display:none}
+  .guide h3{font-family:var(--serif);font-size:20px;margin:22px 0 8px}
+  .guide p,.guide li{font-size:14.5px;color:#cfc9bb;margin-bottom:10px}
+  .guide ol{padding-left:20px}
+  .rule{
+    background:var(--amber-soft);border:1px solid rgba(224,169,62,.3);border-radius:10px;
+    padding:14px 16px;font-size:14px;color:var(--paper);margin-top:18px;
+  }
+  .rule b{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Mikael · Writer's Camp</div>
+  <h1>Penmanship<em>.</em></h1>
+  <div class="sub">20 devices. 20 weeks. Four bars at a time.</div>
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span>Progress</span>
+      <span><b id="doneCount">0</b> / 20 complete</span>
+    </div>
+    <div class="bar"><div id="progressBar"></div></div>
+  </div>
+</header>
+
+<main>
+  <div id="listView"></div>
+  <div class="detail" id="detailView"></div>
+  <div class="notebook" id="notebookView"></div>
+  <div class="guide" id="guideView">
+    <div class="week-tag">How this works</div>
+    <h2 style="font-family:var(--serif);font-size:28px;margin-bottom:14px">The Protocol</h2>
+    <p>One device per week. Twenty minutes a day, inside the journaling slot you already have. Don't stack weeks, don't skip ahead.</p>
+    <h3>The weekly loop</h3>
+    <ol>
+      <li><b>Read</b> the definition once. Don't study it — just understand it.</li>
+      <li><b>Listen</b> to the example track and catch the device in the wild. Then spot it in songs you already love all week.</li>
+      <li><b>Write</b> four bars using the device. Save them in the app. Wrong attempts still build the muscle.</li>
+      <li><b>Mark complete</b> only when the bars are written. Listening doesn't count as done.</li>
+    </ol>
+    <h3>Rules of engagement</h3>
+    <p>Re-read your saved bars at the end of every phase (weeks 5, 10, 15, 20). The cringe is the measurement — it means the writer has outgrown the writing.</p>
+    <p>If a device feels easy, you're probably doing it on autopilot. Push for one version that surprises you.</p>
+    <p>By week 16 you're making album-level decisions for <em style="color:var(--amber)">There's Hope in the Music</em>, not just bar-level ones. Slow down there.</p>
+    <div class="rule"><b>Priority rule:</b> resits outrank this. If a week falls during August exams, pause the schedule. Never stack two devices to catch up.</div>
+  </div>
+</main>
+
+<nav>
+  <button id="tabTracks" class="active" onclick="showView('list')">Tracklist</button>
+  <button id="tabNotebook" onclick="showView('notebook')">Notebook</button>
+  <button id="tabGuide" onclick="showView('guide')">Protocol</button>
+</nav>
+
+<script>
+const WEEKS = [
+ {ph:"Phase I — Foundations",n:1,name:"Imagery",def:"Concrete, photographable detail instead of named feelings. Specifics — postcodes, prices, objects — carry emotion better than the words for the emotion ever will.",song:"Black",artist:"Dave",why:"Count how many abstract feelings he expresses through purely concrete things: objects, places, exact amounts. He almost never names the feeling itself.",drill:"Write four bars about 2013 using only things you could photograph. No emotion words allowed — no 'pain', no 'hard', no 'sad'."},
+ {n:2,name:"Metaphor",def:"One thing spoken of as if it IS another. The feeling never gets named — the image does all the carrying.",song:"Heart on Ice",artist:"Rod Wave",why:"The title is the device — a frozen heart as emotional shutdown. Notice he never says 'I shut down emotionally'. The ice says it.",drill:"Write four bars where a single image carries the feeling, and the feeling itself is never named."},
+ {n:3,name:"Simile",def:"A comparison using 'like' or 'as'. Lands only when the second half is unexpected but true. Dead similes ('cold as ice') are worse than no simile.",song:"Survivor's Guilt",artist:"Dave",why:"His comparisons hit because the second half is always something you didn't see coming but instantly recognise as right.",drill:"Write four bars, each with one simile you have never heard anywhere before. If you've heard it, bin it."},
+ {n:4,name:"Juxtaposition",def:"Two opposites placed side by side, letting the gap between them do the talking. No commentary needed — the contrast IS the meaning.",song:"Both Sides of a Smile",artist:"Dave",why:"The entire track is the device — success and misery sharing single bars, repeatedly, with no resolution offered.",drill:"Write four bars placing the trading screens against something from the hard years. Don't explain the contrast — just place them next to each other."},
+ {n:5,name:"Pathetic Fallacy",def:"Weather and environment mirroring inner emotion. Rain as grief, grey as numbness. Cheap when obvious, devastating when subtle.",song:"Rags2Riches",artist:"Rod Wave",why:"Storms, rain and cold run through his whole catalogue as inner states. Track how often the weather appears exactly when the emotion shifts.",drill:"Write four bars where the weather does all the emotional work and you never name the emotion once."},
+ {ph:"Phase II — Sound & Rhythm",n:6,name:"Anaphora",def:"Repeating the same opening words across consecutive lines. Builds pressure like a drumroll — each repetition adds weight.",song:"Psycho",artist:"Dave",why:"The intro section stacks repeated line-openers until the pressure is unbearable. Count the repetitions before the release.",drill:"Write four bars that all start with the same two words. Make the fourth one break the pattern's meaning."},
+ {n:7,name:"Enjambment",def:"Letting a sentence spill across the bar line so its meaning flips or completes mid-flow. The line break becomes a trapdoor.",song:"Heart Attack",artist:"Dave",why:"Watch how often a line means one thing at the bar's end, then means something else entirely when the next bar lands.",drill:"Write two full sentences spread across four bars. Each break should change or sharpen the meaning."},
+ {n:8,name:"Sibilance",def:"Loading lines with soft S and SH sounds to create smoothness, whisper, or menace before the meaning even registers.",song:"Crown",artist:"Stormzy",why:"The soft S-sounds create a hymn-like smoothness that matches the song's grace. The texture is doing half the emotional work.",drill:"Write four bars deliberately loaded with S and SH sounds. Read them aloud — the sound should feel like the meaning."},
+ {n:9,name:"Assonance",def:"Repeating vowel sounds inside lines, not just at the ends. Glues bars together so they feel inevitable even without end-rhymes.",song:"Location",artist:"Dave & Burna Boy",why:"Both artists lean on repeated vowel sounds mid-line to make bars feel stitched together. Listen for the vowels, not the rhymes.",drill:"Write four bars rhyming vowel sounds mid-line. End-rhymes are banned this week."},
+ {n:10,name:"Caesura",def:"A deliberate full stop in the middle of a line. Silence as a device. The pause is where the dread or the weight lives.",song:"Lesley",artist:"Dave",why:"The pauses are where the dread lives. Notice how the stops mid-line make you brace for what comes after.",drill:"Write four bars with one hard full stop in the middle of a line. Make the silence mean something."},
+ {ph:"Phase III — Structure & Turns",n:11,name:"Volta",def:"The turn. A verse that builds one emotion then pivots in the final bars. Hope songs need this — the darkness has to turn.",song:"Tombstone",artist:"Rod Wave",why:"Mourning that pivots into peace. Find the exact bar where the turn happens and study what triggers it.",drill:"Write an 8-bar verse where bars 7–8 reverse the emotional direction of bars 1–6."},
+ {n:12,name:"Extended Metaphor",def:"One image carried across an entire verse or song. The discipline is making the image survive without breaking or getting forced.",song:"Environment",artist:"Dave",why:"One concept stretched across the whole track without snapping. Track every place the central image reappears in new form.",drill:"Pick one image and force it to survive eight full bars. Every bar must touch the image without repeating it."},
+ {n:13,name:"Dramatic Irony",def:"The listener knows something the narrator in the song doesn't. Brutal in storytelling tracks — the audience watches the danger approach.",song:"Lesley",artist:"Dave",why:"Full track this time. The listener sees the danger long before the character does, and the helplessness is the point.",drill:"Write a short story-verse where your narrator doesn't know what your listener already knows."},
+ {n:14,name:"Second Person",def:"Addressing someone directly as 'you'. Collapses the distance between writer and subject. The listener becomes the addressee.",song:"Letter from Houston",artist:"Rod Wave",why:"The direct-address energy makes a private message feel overheard. The intimacy comes from us not being the intended reader.",drill:"Write four bars addressed to the younger Michael. This is the album concept — take it seriously."},
+ {n:15,name:"Flashback Structure",def:"Folding timelines into a verse — past and present interleaved so each one comments on the other.",song:"Three Rivers",artist:"Dave",why:"Generational timelines folded into single verses. Watch how he moves between eras without ever announcing the jump.",drill:"Write four bars that move from Nigeria to London in one breath. No 'back then' or 'now' signposts."},
+ {ph:"Phase IV — Subtle Weapons",n:16,name:"Motif",def:"An image that recurs across a whole PROJECT, not one song. Connective tissue that makes an album feel like one world.",song:"Psychodrama (full album)",artist:"Dave",why:"The therapy session is the connective tissue across the entire album. Study how it opens, interrupts, and closes the project.",drill:"Album-level decision week: choose 3–4 recurring images for There's Hope in the Music and write them down with one line each on what they carry."},
+ {n:17,name:"Symbolism",def:"An object standing for something larger. As a new convert you have an entire symbolic vocabulary most UK artists never touch.",song:"Blinded by Your Grace, Pt. 2",artist:"Stormzy",why:"Light as faith, sustained across the song without ever becoming a sermon. The symbol carries the deen — the lyrics never preach.",drill:"Write four bars where an object stands for your faith without preaching. The listener who knows, knows."},
+ {n:18,name:"Personification",def:"Giving an emotion or idea a body and behaviour. Pain becomes a person who visits, stays, refuses to leave.",song:"Pieces",artist:"Rod Wave",why:"He treats pain like a person with habits and a schedule. Note every human behaviour the emotion is given.",drill:"Write four bars where one emotion has a body, a routine, and a way of speaking."},
+ {n:19,name:"Antithesis",def:"Balanced opposites inside a single line — the tighter, sharper cousin of juxtaposition. One bar, two poles.",song:"Both Sides of a Smile",artist:"Dave",why:"Return to the hook structure with new ears — the oppositions now live inside single lines, perfectly balanced.",drill:"Write four single-line oppositions. Each bar must hold both poles in balance."},
+ {n:20,name:"Allusion",def:"Buried references that reward the listener who catches them — scripture, history, trading, Nigeria. Density without clutter.",song:"In the Fire",artist:"Dave",why:"His catalogue is dense with references that casual listeners sail past and the right listener decodes. Find three on one listen.",drill:"Write four bars with one buried reference per bar — Qur'an, Nigeria, the charts, your own history — that only the right listener decodes."}
+];
+
+const KEY='penmanship-state-v1';
+let state={done:{},bars:{}};
+let currentWeek=null;
+
+/* storage: Claude artifact storage if present, localStorage if running standalone on phone */
+async function loadState(){
+  try{
+    if(window.storage){
+      const r=await window.storage.get(KEY).catch(()=>null);
+      if(r&&r.value)state=JSON.parse(r.value);
+    }else if(window.localStorage){
+      const r=localStorage.getItem(KEY);
+      if(r)state=JSON.parse(r);
+    }
+  }catch(e){}
+  render();
+}
+async function saveState(){
+  try{
+    if(window.storage){await window.storage.set(KEY,JSON.stringify(state));}
+    else if(window.localStorage){localStorage.setItem(KEY,JSON.stringify(state));}
+  }catch(e){}
+}
+
+function doneCount(){return Object.values(state.done).filter(Boolean).length}
+function currentWeekNum(){
+  for(const w of WEEKS){if(!state.done[w.n])return w.n}
+  return null;
+}
+
+function render(){
+  const dc=doneCount();
+  document.getElementById('doneCount').textContent=dc;
+  document.getElementById('progressBar').style.width=(dc/20*100)+'%';
+  renderList();
+  renderNotebook();
+}
+
+function renderList(){
+  const cur=currentWeekNum();
+  let html='';
+  for(const w of WEEKS){
+    if(w.ph)html+='<div class="phase-label"><span>'+w.ph.split(' — ')[0]+'</span> — '+w.ph.split(' — ')[1]+'</div>';
+    const isDone=!!state.done[w.n];
+    const isCur=w.n===cur;
+    html+='<div class="track'+(isDone?' done':'')+(isCur?' current':'')+'" onclick="openWeek('+w.n+')">'
+      +'<div class="tnum">'+String(w.n).padStart(2,'0')+'</div>'
+      +'<div class="tbody"><div class="tname">'+w.name+'</div>'
+      +'<div class="tref">'+w.song+' — '+w.artist+(isCur?' &nbsp;·&nbsp; <span class="now-label">this week</span>':'')+'</div></div>'
+      +'<div class="tstate">'+(isDone?'✓':(isCur?'●':'○'))+'</div></div>';
+  }
+  document.getElementById('listView').innerHTML=html;
+}
+
+function openWeek(n){
+  currentWeek=n;
+  const w=WEEKS.find(x=>x.n===n);
+  const isDone=!!state.done[n];
+  const bars=state.bars[n]||'';
+  document.getElementById('detailView').innerHTML=
+    '<button class="back" onclick="showView(\'list\')">Tracklist</button>'
+    +'<div class="week-tag">Week '+String(n).padStart(2,'0')+' of 20</div>'
+    +'<h2>'+w.name+'</h2>'
+    +'<div class="block"><div class="block-label">The device</div><p>'+w.def+'</p></div>'
+    +'<div class="block"><div class="block-label">Listen</div><div class="listen">'
+      +'<div class="artist">'+w.artist+'</div><div class="song">'+w.song+'</div>'
+      +'<div class="why">'+w.why+'</div></div></div>'
+    +'<div class="block"><div class="block-label">The drill</div><div class="drill">'+w.drill+'</div></div>'
+    +'<div class="block"><div class="block-label">Your bars</div>'
+      +'<textarea id="barsInput" placeholder="Four bars. Wrong attempts still build the muscle...">'+escapeHtml(bars)+'</textarea>'
+      +'<div class="save-row">'
+        +'<button class="btn btn-save" onclick="saveBars()">Save bars</button>'
+        +'<button class="btn btn-done'+(isDone?' undone':'')+'" onclick="toggleDone()">'+(isDone?'✓ Completed':'Mark complete')+'</button>'
+      +'</div><div class="saved-flash" id="flash"></div></div>';
+  showView('detail');
+  window.scrollTo(0,0);
+}
+
+async function saveBars(){
+  const v=document.getElementById('barsInput').value;
+  state.bars[currentWeek]=v;
+  await saveState();
+  flash('Saved');
+}
+async function toggleDone(){
+  const v=document.getElementById('barsInput');
+  if(v)state.bars[currentWeek]=v.value;
+  state.done[currentWeek]=!state.done[currentWeek];
+  await saveState();
+  render();
+  openWeek(currentWeek);
+  if(state.done[currentWeek])flash('Week '+currentWeek+' locked in');
+}
+function flash(msg){
+  const f=document.getElementById('flash');
+  if(!f)return;
+  f.textContent=msg;
+  setTimeout(()=>{if(f)f.textContent=''},1800);
+}
+
+function renderNotebook(){
+  const entries=WEEKS.filter(w=>state.bars[w.n]&&state.bars[w.n].trim());
+  let html='';
+  if(!entries.length){
+    html='<div class="nb-empty"><div class="big">Empty pages, for now.</div>Every four bars you save lands here. By week 20 this is the raw ore for There\'s Hope in the Music.</div>';
+  }else{
+    html='<div class="phase-label"><span>Notebook</span> — everything you\'ve written</div>';
+    for(const w of entries){
+      html+='<div class="nb-entry"><div class="nb-week">Week '+String(w.n).padStart(2,'0')+' · '+w.name+'</div>'
+        +'<div class="nb-bars">'+escapeHtml(state.bars[w.n])+'</div></div>';
+    }
+  }
+  document.getElementById('notebookView').innerHTML=html;
+}
+
+function showView(v){
+  document.getElementById('listView').style.display=(v==='list')?'block':'none';
+  document.getElementById('detailView').style.display=(v==='detail')?'block':'none';
+  document.getElementById('notebookView').style.display=(v==='notebook')?'block':'none';
+  document.getElementById('guideView').style.display=(v==='guide')?'block':'none';
+  document.getElementById('tabTracks').className=(v==='list'||v==='detail')?'active':'';
+  document.getElementById('tabNotebook').className=(v==='notebook')?'active':'';
+  document.getElementById('tabGuide').className=(v==='guide')?'active':'';
+  if(v==='notebook')renderNotebook();
+  window.scrollTo(0,0);
+}
+
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+loadState();
+</script>
+</body>
+</html>
