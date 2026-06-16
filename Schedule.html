@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Anchor">
+<meta name="theme-color" content="#0b0a08">
+<title>Anchor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0a08;
+  --rail:#3a2f22;
+  --amber:#e3a04b;
+  --amber-bright:#ffc878;
+  --text:#f3ece1;
+  --muted:#9c8d7c;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+
+.wrap{
+  max-width:480px;
+  margin:0 auto;
+  padding:36px 20px 60px;
+}
+
+header{ margin-bottom:30px; }
+
+.eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.2em;
+  color:var(--amber);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+h1{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:28px;
+  margin:0 0 10px;
+  line-height:1.2;
+}
+
+.streak{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px;
+  color:var(--muted);
+}
+.streak span{ color:var(--amber-bright); font-weight:600; }
+
+.caption{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:12px;
+  line-height:1.5;
+}
+
+.day{ position:relative; }
+
+.day::before{
+  content:'';
+  position:absolute;
+  top:26px;
+  bottom:26px;
+  left:11px;
+  width:2px;
+  background:var(--rail);
+}
+
+.row{
+  display:grid;
+  grid-template-columns:24px 1fr;
+  gap:16px;
+  padding:13px 0;
+  cursor:pointer;
+  transition:opacity .2s ease;
+}
+
+.row:focus-visible{
+  outline:2px solid var(--amber-bright);
+  outline-offset:4px;
+  border-radius:6px;
+}
+
+.node{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:24px;
+}
+
+.node::before{
+  content:'';
+  display:block;
+  width:13px;
+  height:13px;
+  background:var(--bg);
+  border:2px solid var(--rail);
+  z-index:1;
+  transition:background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.row.prayer .node::before{ border-radius:50%; }
+
+.row.task .node::before{
+  border-radius:3px;
+  transform:rotate(45deg);
+  width:11px;
+  height:11px;
+}
+
+.row.checked .node::before{
+  background:var(--amber);
+  border-color:var(--amber-bright);
+  box-shadow:0 0 10px rgba(227,160,75,0.55);
+}
+
+.content h3{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:17px;
+  margin:0 0 3px;
+  transition:opacity .2s ease;
+}
+
+.content p{
+  font-size:13px;
+  color:var(--muted);
+  margin:0;
+  line-height:1.4;
+  transition:opacity .2s ease;
+}
+
+.row.checked .content h3,
+.row.checked .content p{ opacity:0.4; }
+
+textarea{
+  width:100%;
+  margin-top:10px;
+  background:transparent;
+  border:none;
+  border-bottom:1px solid var(--rail);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  padding:6px 0;
+  resize:none;
+  min-height:44px;
+}
+textarea:focus{ outline:none; border-bottom-color:var(--amber); }
+textarea::placeholder{ color:var(--muted); }
+
+footer{
+  margin-top:32px;
+  font-size:11px;
+  letter-spacing:0.1em;
+  color:var(--rail);
+  text-align:center;
+  font-family:'IBM Plex Mono', monospace;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Today</div>
+    <h1 id="dateDisplay"></h1>
+    <div class="streak">Salah streak — <span id="streakCount">0</span> days</div>
+    <p class="caption">Fajr to Isha — everything else fits in between. Showing up today is what starts the count.</p>
+  </header>
+  <div class="day" id="stack"></div>
+  <footer>RESETS AT MIDNIGHT · STAYS ON THIS DEVICE</footer>
+</div>
+<script>
+const RESIT_ROTATION = [
+  'Mock test + review',          // Sun
+  'Individual Project — Nike rewrite', // Mon
+  'Economics',                    // Tue
+  'Accounting',                   // Wed
+  'Individual Project — Nike rewrite', // Thu
+  'Economics',                    // Fri
+  'Accounting'                    // Sat
+];
+
+const ITEMS = [
+  { id:'fajr',    type:'prayer', title:'Fajr',          sub:'Dawn prayer' },
+  { id:'resit',   type:'task',   title:'Resit block',   sub:'' },
+  { id:'income',  type:'task',   title:'Income action', sub:'One job-search move — walk-in, follow-up, or form' },
+  { id:'dhuhr',   type:'prayer', title:'Dhuhr',          sub:'Midday prayer' },
+  { id:'trading', type:'task',   title:'NY session',    sub:'14:30–16:30 · demo + journal review' },
+  { id:'asr',     type:'prayer', title:'Asr',            sub:'Afternoon prayer' },
+  { id:'journal', type:'task',   title:'Journal & read', sub:'A page or two, no minimum' },
+  { id:'maghrib', type:'prayer', title:'Maghrib',        sub:'Evening prayer' },
+  { id:'music',   type:'task',   title:'Music block',    sub:'Penmanship, lyrics — no cap' },
+  { id:'isha',    type:'prayer', title:'Isha',           sub:'Night prayer' }
+];
+
+const PRAYER_IDS = ITEMS.filter(i => i.type === 'prayer').map(i => i.id);
+
+function dateKey(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function load(){
+  const today = dateKey(new Date());
+  let raw = localStorage.getItem('anchor-data');
+  let data = raw ? JSON.parse(raw) : null;
+
+  if(!data){
+    data = { date: today, checks: {}, note: '', streak: 0 };
+  } else if(data.date !== today){
+    const allPrayed = PRAYER_IDS.every(id => !!data.checks[id]);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yKey = dateKey(yesterday);
+
+    data.streak = (data.date === yKey && allPrayed) ? (data.streak || 0) + 1 : 0;
+    data.date = today;
+    data.checks = {};
+    data.note = '';
+  }
+  return data;
+}
+
+let state = load();
+save();
+
+function save(){ localStorage.setItem('anchor-data', JSON.stringify(state)); }
+
+function render(){
+  const now = new Date();
+  document.getElementById('dateDisplay').textContent =
+    now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('streakCount').textContent = state.streak;
+
+  const resit = ITEMS.find(i => i.id === 'resit');
+  resit.sub = RESIT_ROTATION[now.getDay()];
+
+  const container = document.getElementById('stack');
+  container.innerHTML = '';
+
+  ITEMS.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'row ' + item.type + (state.checks[item.id] ? ' checked' : '');
+    row.setAttribute('role', 'checkbox');
+    row.setAttribute('aria-checked', !!state.checks[item.id]);
+    row.setAttribute('tabindex', '0');
+
+    row.innerHTML =
+      '<div class="node"></div>' +
+      '<div class="content">' +
+        '<h3>' + item.title + '</h3>' +
+        '<p>' + item.sub + '</p>' +
+        (item.id === 'journal' ? '<textarea placeholder="What did you read or write today?"></textarea>' : '') +
+      '</div>';
+
+    const toggle = () => {
+      state.checks[item.id] = !state.checks[item.id];
+      row.classList.toggle('checked');
+      row.setAttribute('aria-checked', !!state.checks[item.id]);
+      save();
+    };
+
+    row.addEventListener('click', e => {
+      if(e.target.tagName === 'TEXTAREA') return;
+      toggle();
+    });
+    row.addEventListener('keydown', e => {
+      if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); toggle(); }
+    });
+
+    if(item.id === 'journal'){
+      const ta = row.querySelector('textarea');
+      ta.value = state.note || '';
+      ta.addEventListener('input', () => { state.note = ta.value; save(); });
+    }
+
+    container.appendChild(row);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
